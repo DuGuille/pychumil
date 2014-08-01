@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>PyCh'umil</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="base.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src='http://cdn.ractivejs.org/latest/ractive.js'></script>
+  </head>
+
+  <body>
+
+
+    <div class="site-wrapper">
+
+      <div class="site-wrapper-inner">
+
+        <div class="cover-container">
+
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand">PyCh'umil</h3>
+              <ul class="nav masthead-nav">
+                <li><a href="https://github.com/DuGuille/pychumil">Github</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="inner cover">
+            <h1 class="cover-heading">Las estrellas más brillantes en Guatemala.</h1>
+            <p class="lead" id="stars"></p>
+          </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+              <p>Cover template for <a href="http://getbootstrap.com">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <script src="jquery.min.js"></script>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+    <script id="stars_template" type="text/ractive">
+    {{#stars:i}}
+    <p style="font-size:{{20-i/2}}px;">
+        <b>{{name || gliesse || bayerflamsteed}}</b>
+        <i> [ {{parseFloat(altitude.toPrecision(2))}}&deg; , {{parseFloat(azimuth.toPrecision(2))}}&deg; ] </i> 
+    </p>
+    {{/stars}}
+    <svg style="width:{{svg.r*2+100}}px;height:{{svg.r*2+100}}px;background:none;">
+        <circle cx="{{svg.r+50}}" cy="{{svg.r+50}}" r="{{svg.r}}" fill="#000" />
+        <text x="{{40 + svg.r}}" y="40" >N</text>
+        <text x="{{80 + 2*svg.r}}" y="{{svg.r+60}}" >E</text>
+        <text x="{{40 + svg.r}}" y="{{svg.r*2+80}}" >S</text>
+        <text x="{{20}}" y="{{svg.r+60}}" >O</text>
+      {{#stars}}
+        <circle class="star" data-toggle="tooltip" title="{{name || gliesse || bayerflamsteed}}" cx="{{50+svg_getCx(altitude,azimuth,../../svg.r)}}" cy="{{50+svg_getCy(altitude,azimuth,../../svg.r)}}" r="4" fill="{{svg_getColor(mag)}}" />
+      {{/stars}}
+    </svg>
+    <hr />
+    <small>{{getDate(utcnow.$date)}}, latitud {{lat}}, longitud {{lon}}</small>
+    </script>
+    <script>
+      $.ajax({
+            url:"brightest_hyg", type:'get',
+            dataType: "text", headers: { 'Cache-Control':'max-age:300'},
+            success: function(remoteData) 
+              { 
+                var parsedData = eval('('+remoteData+')');
+                parsedData.getDate = function(timestamp) { return String(new Date(timestamp)) };
+                parsedData.svg_getCx = function (alt,az, r) { return Math.sin(az*Math.PI/180)*(1-alt/90)*r+r };
+                parsedData.svg_getCy = function (alt,az, r) { return -Math.cos(az*Math.PI/180)*(1-alt/90)*r+r };
+                parsedData.svg_getColor = function(mag) {
+                    var normmag = (1-((mag-this.data.svg.magrange[0]))/(this.data.svg.magrange[1]-this.data.svg.magrange[0]));
+                    var val = Math.floor(Math.sqrt(normmag)*200 + 55);
+                    return "rgb("+val+","+val+","+val+")";
+                  };
+                var minmag=Infinity, maxmag=-Infinity;
+                $.each(parsedData.stars, function(i,e) {
+                    if (e.mag > maxmag) maxmag=e.mag; 
+                    if (e.mag < minmag) minmag=e.mag; })
+                parsedData.svg = {        
+                  r: 200,
+                  magrange: [minmag, maxmag]
+                };
+                var ractive = new Ractive({
+                  el: 'stars',
+                  template: '#stars_template',
+                  data: parsedData
+                });
+                $("circle.star").tooltip({container:'body'});
+              }
+           }
+           );
+    </script>
+    
+    </body>
+</html>
+
