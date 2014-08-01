@@ -7,7 +7,7 @@ I've made this for my astronomy homework. The functions used were ported from ja
 
 As a program, it shows the 20 most bright stars as seen from Guatemala. You can pass other value for lat and lon.
 
-This uses the HYG catalog found here http://www.astronexus.com/hyg.
+This uses the HYG catalog found here http://www.astronexus.com/hyg. Download the latest catalog here https://github.com/DuGuille/HYG-Database/blob/master/hygfull.csv .
 
 Right now, ("Thu Jul 31 2014 18:05:21 GMT-0600 (CST)") the output is this:
 
